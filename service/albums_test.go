@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/derekpedersen/imgur-go/service"
@@ -9,10 +10,11 @@ import (
 func TestGetAlbum(t *testing.T) {
 	// Arrange
 	albumID := "PIRuI"
-	service.NewAlbumService("")
+	apiKey := os.Getenv("IMGUR_API_KEY")
+	alSvc := service.NewAlbumService(apiKey)
 
 	// Act
-	album, err := service.GetAlbum(albumID)
+	album, err := alSvc.GetAlbum(albumID)
 
 	// Assert
 	if err != nil {
@@ -26,10 +28,11 @@ func TestGetAlbum(t *testing.T) {
 func TestQueryAlbum(t *testing.T) {
 	// Arrange
 	albumID := "PIRuI"
-	service.NewAlbumService("")
+	apiKey := os.Getenv("IMGUR_API_KEY")
+	alSvc := service.NewAlbumService(apiKey)
 
 	// Act
-	album, err := service.QueryAlbum(albumID)
+	album, err := alSvc.QueryAlbum(albumID)
 
 	// Assert
 	if err != nil {

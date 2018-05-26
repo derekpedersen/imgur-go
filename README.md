@@ -1,3 +1,3 @@
 # Imgur
 
-Consumption of the imgur api via golang library.
+Golang package for consuming Imgur albums.
