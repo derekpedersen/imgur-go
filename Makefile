@@ -3,4 +3,4 @@ main:
 	go build -o bin/imgur-go
 
 test:
-	go test -cover ./... -v
+	go test ./... -v -coverprofile cp.out

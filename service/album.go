@@ -9,24 +9,28 @@ import (
 	"github.com/jeanphorn/log4go"
 )
 
-type AlbumsService interface {
+// AlbumService interface
+type AlbumService interface {
 	QueryAlbum(albumHash string) (json string, err error)
 	GetAlbum(albumHash string) (*model.Album, error)
 }
 
-type AlbumsServiceImpl struct {
+// AlbumServiceImpl struct
+type AlbumServiceImpl struct {
 	auth model.Authorization
 }
 
-func NewAlbumService(clientID string) *AlbumsServiceImpl {
-	return &AlbumsServiceImpl{
+// NewAlbumService creates a new album service
+func NewAlbumService(clientID string) *AlbumServiceImpl {
+	return &AlbumServiceImpl{
 		auth: model.Authorization{
 			ClientID: clientID,
 		},
 	}
 }
 
-func (svc *AlbumsServiceImpl) QueryAlbum(albumHash string) (json string, err error) {
+// QueryAlbum queries an album
+func (svc *AlbumServiceImpl) QueryAlbum(albumHash string) (json string, err error) {
 	log4go.Info("Querying Album: %s", albumHash)
 
 	url := "https://api.imgur.com/3/album/" + albumHash
@@ -54,21 +58,21 @@ func (svc *AlbumsServiceImpl) QueryAlbum(albumHash string) (json string, err err
 
 	json = string(body)
 
-	log4go.Info("Album JSON: %s", json)
+	log4go.Debug("Album JSON: %s", json)
 
 	return json, nil
 }
 
-// GetAlbum
-func (svc *AlbumsServiceImpl) GetAlbum(albumHash string) (*model.Album, error) {
+// GetAlbum gets the album
+func (svc *AlbumServiceImpl) GetAlbum(albumHash string) (*model.Album, error) {
 	res := model.AlbumResponse{}
-	albumJson, err := svc.QueryAlbum(albumHash)
+	albumJSON, err := svc.QueryAlbum(albumHash)
 	if err != nil {
 		log4go.Error("Error querying album:\n %v", err)
 		return nil, err
 	}
 
-	if err = json.Unmarshal([]byte(albumJson), &res); err != nil {
+	if err = json.Unmarshal([]byte(albumJSON), &res); err != nil {
 		log4go.Error("Error unmarshalling album response:\n %v", err)
 		return nil, err
 	}
