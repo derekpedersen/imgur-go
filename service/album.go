@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/derekpedersen/imgur-go/model"
-	"github.com/jeanphorn/log4go"
+	log "github.com/sirupsen/logrus"
 )
 
 // AlbumService interface
@@ -31,13 +31,13 @@ func NewAlbumService(clientID string) *AlbumServiceImpl {
 
 // QueryAlbum queries an album
 func (svc *AlbumServiceImpl) QueryAlbum(albumHash string) (json string, err error) {
-	log4go.Info("Querying Album: %s", albumHash)
+	log.Infof("Querying Album: %s", albumHash)
 
 	url := "https://api.imgur.com/3/album/" + albumHash
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log4go.Error("Error creating request:\n %v", err)
+		log.Errorf("Error creating request:\n %v", err)
 		return "", err
 	}
 
@@ -45,20 +45,20 @@ func (svc *AlbumServiceImpl) QueryAlbum(albumHash string) (json string, err erro
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log4go.Error("Error making request:\n %v", err)
+		log.Errorf("Error making request:\n %v", err)
 		return "", err
 	}
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log4go.Error("Error reading res.Body:\n %v", err)
+		log.Errorf("Error reading res.Body:\n %v", err)
 		return "", err
 	}
 
 	json = string(body)
 
-	log4go.Debug("Album JSON: %s", json)
+	log.Debugf("Album JSON: %s", json)
 
 	return json, nil
 }
@@ -68,12 +68,12 @@ func (svc *AlbumServiceImpl) GetAlbum(albumHash string) (*model.Album, error) {
 	res := model.AlbumResponse{}
 	albumJSON, err := svc.QueryAlbum(albumHash)
 	if err != nil {
-		log4go.Error("Error querying album:\n %v", err)
+		log.Errorf("Error querying album:\n %v", err)
 		return nil, err
 	}
 
 	if err = json.Unmarshal([]byte(albumJSON), &res); err != nil {
-		log4go.Error("Error unmarshalling album response:\n %v", err)
+		log.Errorf("Error unmarshalling album response:\n %v", err)
 		return nil, err
 	}
 
