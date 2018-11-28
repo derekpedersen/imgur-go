@@ -11,6 +11,10 @@ One day I would like to expand to cover the entire [imgur api](https://apidocs.i
 
 This project is built using golang, if you don't have it installed on your machine you can find the [instructions here](https://golang.org/doc/install).
 
+### main.go
+
+This project is consumed by other projects and isn't an application that is itself deployed, so there is a `main.go` file at the root of the project just to make `golang` happy. I'm sure there is a more elegant solution but for now this is the setup.
+
 ## dependencies
 
 Currently the `imgur-go` package relies on `dep` for it's dependency management. If you don't have `dep` installed on your machine just follow the [instructions here](https://github.com/golang/dep#installation).
