@@ -28,15 +28,15 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            withCredentials([[$class: 'StringBinding', credentialsId: 'IMGUR_GO_COVERALLS_TOKEN', variable: 'COVERALLS_TOKEN']]) {
-                dir('/root/workspace/go/src/github.com/derekpedersen/imgur-go') {
-                    step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cp.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false]) 
-                    sh 'go get github.com/derekpedersen/goveralls'
-                    sh 'goveralls -coverprofile=cp.out'
-                }
-            }
-        }
-    }
+    // post {
+    //     always {
+    //         withCredentials([[$class: 'StringBinding', credentialsId: 'IMGUR_GO_COVERALLS_TOKEN', variable: 'COVERALLS_TOKEN']]) {
+    //             dir('/root/workspace/go/src/github.com/derekpedersen/imgur-go') {
+    //                 step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cp.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false]) 
+    //                 sh 'go get github.com/derekpedersen/goveralls'
+    //                 sh 'goveralls -coverprofile=cp.out'
+    //             }
+    //         }
+    //     }
+    // }
 }
