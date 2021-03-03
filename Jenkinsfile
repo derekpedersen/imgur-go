@@ -2,6 +2,9 @@ pipeline {
     agent {
         label 'build-golang-stable'
     }
+    options {
+        skipDefaultCheckout true
+    }
     stages {
         stage('Checkout') {
             steps{
