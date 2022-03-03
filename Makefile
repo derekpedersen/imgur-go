@@ -1,6 +1,7 @@
 dependencies:
-	dep ensure
-
+	go mod vendor
+	go mod download
+	
 build:
 	go build -o bin/imgur-go
 
