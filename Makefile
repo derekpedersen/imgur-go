@@ -1,4 +1,5 @@
 dependencies:
+	go mod vendor
 	go mod download
 	
 build:
