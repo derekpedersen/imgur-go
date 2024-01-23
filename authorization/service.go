@@ -65,6 +65,8 @@ func (a *Authorization) GenerateAccessToken() (
 
 	defer resp.Body.Close()
 
+	imgurTokenResponse = &ImgurTokenResponse{}
+
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

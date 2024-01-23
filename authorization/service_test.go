@@ -10,21 +10,16 @@ func Test_GenerateAccessToken(t *testing.T) {
 
 	// Arrange
 
-	auth, err := authorization.NewAuthorization()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Act
 
-	accessToken, err := auth.GenerateAccessToken()
+	auth, err := authorization.NewAuthorization()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Assert
 
-	if accessToken == nil || len(accessToken.AccessToken) <= 0 {
+	if auth == nil || len(auth.ImgurTokenResponse.AccessToken) <= 0 {
 		t.Fatalf("expected access token to be set")
 	}
 }
