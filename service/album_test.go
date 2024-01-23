@@ -10,8 +10,8 @@ import (
 func TestGetAlbum(t *testing.T) {
 	// Arrange
 	albumID := "PIRuI"
-	apiKey := os.Getenv("IMGUR_API_KEY")
-	alSvc := service.NewAlbumService(apiKey)
+	accessToken := os.Getenv("IMGUR_ACCESS_TOKEN")
+	alSvc := service.NewAlbumService(accessToken, "https://api.imgur.com/3/album/")
 
 	// Act
 	album, err := alSvc.GetAlbum(albumID)
@@ -28,8 +28,8 @@ func TestGetAlbum(t *testing.T) {
 func TestQueryAlbum(t *testing.T) {
 	// Arrange
 	albumID := "PIRuI"
-	apiKey := os.Getenv("IMGUR_API_KEY")
-	alSvc := service.NewAlbumService(apiKey)
+	accessToken := os.Getenv("IMGUR_ACCESS_TOKEN")
+	alSvc := service.NewAlbumService(accessToken, "https://api.imgur.com/3/album/")
 
 	// Act
 	album, err := alSvc.QueryAlbum(albumID)
@@ -38,7 +38,7 @@ func TestQueryAlbum(t *testing.T) {
 	if err != nil {
 		t.Errorf("Experienced an error: %v", err)
 	}
-	if len(album) == 0 {
+	if len(*album) == 0 {
 		t.Errorf("No Album Returned")
 	}
 }
