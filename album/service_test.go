@@ -1,17 +1,17 @@
-package service_test
+package album_test
 
 import (
-	"os"
 	"testing"
 
-	"github.com/derekpedersen/imgur-go/service"
+	"github.com/derekpedersen/imgur-go/album"
+	"github.com/derekpedersen/imgur-go/authorization"
 )
 
 func TestGetAlbum(t *testing.T) {
 	// Arrange
 	albumID := "PIRuI"
-	accessToken := os.Getenv("IMGUR_ACCESS_TOKEN")
-	alSvc := service.NewAlbumService(accessToken, "https://api.imgur.com/3/album/")
+	auth, _ := authorization.NewAuthorization()
+	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 
 	// Act
 	album, err := alSvc.GetAlbum(albumID)
@@ -28,8 +28,8 @@ func TestGetAlbum(t *testing.T) {
 func TestQueryAlbum(t *testing.T) {
 	// Arrange
 	albumID := "PIRuI"
-	accessToken := os.Getenv("IMGUR_ACCESS_TOKEN")
-	alSvc := service.NewAlbumService(accessToken, "https://api.imgur.com/3/album/")
+	auth, _ := authorization.NewAuthorization()
+	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 
 	// Act
 	album, err := alSvc.QueryAlbum(albumID)

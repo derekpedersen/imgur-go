@@ -1,36 +1,34 @@
-package service
+package album
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/derekpedersen/imgur-go/model"
+	"github.com/derekpedersen/imgur-go/authorization"
 	log "github.com/sirupsen/logrus"
 )
 
 // AlbumService interface
 type AlbumService interface {
 	QueryAlbum(albumHash string) (json string, err error)
-	GetAlbum(albumHash string) (*model.Album, error)
+	GetAlbum(albumHash string) (*Album, error)
 }
 
 // AlbumServiceImpl struct
 type AlbumServiceImpl struct {
-	auth model.Authorization
+	auth authorization.Authorization
 	url  string
 }
 
 // NewAlbumService creates a new album service
 func NewAlbumService(
-	accessToken string,
+	auth authorization.Authorization,
 	apiURL string,
 ) *AlbumServiceImpl {
 	return &AlbumServiceImpl{
-		auth: model.Authorization{
-			AccessToken: accessToken,
-		},
-		url: apiURL,
+		auth: auth,
+		url:  apiURL,
 	}
 }
 
@@ -50,7 +48,7 @@ func (svc *AlbumServiceImpl) QueryAlbum(
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", " Bearer "+svc.auth.AccessToken)
+	req.Header.Add("Authorization", " Bearer "+svc.auth.ImgurTokenResponse.AccessToken)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -76,8 +74,8 @@ func (svc *AlbumServiceImpl) QueryAlbum(
 }
 
 // GetAlbum gets the album
-func (svc *AlbumServiceImpl) GetAlbum(albumHash string) (*model.Album, error) {
-	res := model.AlbumResponse{}
+func (svc *AlbumServiceImpl) GetAlbum(albumHash string) (*Album, error) {
+	res := AlbumResponse{}
 	albumJSON, err := svc.QueryAlbum(albumHash)
 	if err != nil {
 		log.Errorf("Error querying album:\n %v", err)
