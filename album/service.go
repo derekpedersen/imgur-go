@@ -11,7 +11,7 @@ import (
 
 // AlbumService interface
 type AlbumService interface {
-	QueryAlbum(albumHash string) (json string, err error)
+	QueryAlbum(albumHash string) (json *string, err error)
 	GetAlbum(albumHash string) (*Album, error)
 }
 
