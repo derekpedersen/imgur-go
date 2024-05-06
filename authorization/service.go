@@ -26,30 +26,48 @@ func (a *Authorization) GenerateAccessToken() (
 ) {
 
 	form := new(bytes.Buffer)
+
 	writer := multipart.NewWriter(form)
+
 	formField, err := writer.CreateFormField("refresh_token")
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = formField.Write([]byte(a.RefreshToken))
+	if err != nil {
+		return nil, err
+	}
 
 	formField, err = writer.CreateFormField("client_id")
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = formField.Write([]byte(a.ClientID))
+	if err != nil {
+		return nil, err
+	}
 
 	formField, err = writer.CreateFormField("client_secret")
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = formField.Write([]byte(a.ClientSecret))
+	if err != nil {
+		return nil, err
+	}
 
 	formField, err = writer.CreateFormField("grant_type")
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = formField.Write([]byte("refresh_token"))
+	if err != nil {
+		return nil, err
+	}
 
 	writer.Close()
 
@@ -78,7 +96,7 @@ func (a *Authorization) GenerateAccessToken() (
 		return nil, err
 	}
 
-	logrus.Debugf("imgur auth: %v", *imgurTokenResponse)
+	logrus.Debugf("imgur auth: %v", string(bodyText))
 
 	return imgurTokenResponse, nil
 }
