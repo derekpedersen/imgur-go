@@ -77,6 +77,8 @@ func (a *Authorization) GenerateAccessToken() (
 		return nil, err
 	}
 
+	logrus.Debugf("imgur auth request: %v", *req)
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	resp, err := client.Do(req)
 	if err != nil {
@@ -96,7 +98,7 @@ func (a *Authorization) GenerateAccessToken() (
 		return nil, err
 	}
 
-	logrus.Debugf("imgur auth: %v", string(bodyText))
+	logrus.Debugf("imgur auth response: %v", string(bodyText))
 
 	return imgurTokenResponse, nil
 }
