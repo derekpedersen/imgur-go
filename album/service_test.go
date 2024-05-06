@@ -9,7 +9,7 @@ import (
 
 func TestGetAlbum(t *testing.T) {
 	// Arrange
-	albumID := "PIRuI"
+	albumID := "4TZhhtk"
 	auth, _ := authorization.NewAuthorization()
 	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 

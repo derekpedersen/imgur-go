@@ -6,6 +6,8 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 type ImgurTokenResponse struct {
@@ -75,6 +77,8 @@ func (a *Authorization) GenerateAccessToken() (
 	if err := json.Unmarshal(bodyText, imgurTokenResponse); err != nil {
 		return nil, err
 	}
+
+	logrus.Debugf("imgur auth: %v", *imgurTokenResponse)
 
 	return imgurTokenResponse, nil
 }

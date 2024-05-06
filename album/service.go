@@ -68,7 +68,7 @@ func (svc *AlbumServiceImpl) QueryAlbum(
 
 	json = &body
 
-	log.Debugf("Album JSON: %v", json)
+	log.Debugf("Album JSON: %v", *json)
 
 	return json, nil
 }
