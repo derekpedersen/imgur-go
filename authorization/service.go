@@ -117,3 +117,8 @@ func (a *Authorization) SetAccessToken() (
 
 	return imgurTokenResponse, nil
 }
+
+func (a *Authorization) GetAccessToken() string {
+
+	return a.ImgurTokenResponse.AccessToken
+}
