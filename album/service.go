@@ -89,6 +89,12 @@ func (svc *AlbumServiceImpl) QueryAlbum(
 		return nil, err
 	}
 
+	if svc.auth.ImgurTokenResponse == nil || len(svc.auth.ImgurTokenResponse.AccessToken) == 0 {
+		err := fmt.Errorf("imgur access token is not configured")
+		log.Errorf("Error preparing request:\n %v", err)
+		return nil, err
+	}
+
 	req.Header.Add("Authorization", " Bearer "+svc.auth.ImgurTokenResponse.AccessToken)
 
 	res, err := http.DefaultClient.Do(req)

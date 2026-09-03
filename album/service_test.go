@@ -26,7 +26,10 @@ func TestGetAlbum(t *testing.T) {
 
 	// Arrange
 	albumID := "4TZhhtk"
-	auth, _ := authorization.NewAuthorization()
+	auth, err := authorization.NewAuthorization()
+	if err != nil {
+		t.Fatalf("failed to initialize authorization: %v", err)
+	}
 	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 
 	// Act
@@ -35,6 +38,9 @@ func TestGetAlbum(t *testing.T) {
 	// Assert
 	if err != nil {
 		t.Errorf("Experienced an error: %v", err)
+	}
+	if album == nil {
+		t.Fatalf("No Album Returned")
 	}
 	if len(album.ID) == 0 {
 		t.Errorf("No Album Returned")
@@ -48,17 +54,23 @@ func TestQueryAlbum(t *testing.T) {
 
 	// Arrange
 	albumID := "PIRuI"
-	auth, _ := authorization.NewAuthorization()
+	auth, err := authorization.NewAuthorization()
+	if err != nil {
+		t.Fatalf("failed to initialize authorization: %v", err)
+	}
 	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 
 	// Act
-	album, err := alSvc.QueryAlbum(albumID)
+	albumJSON, err := alSvc.QueryAlbum(albumID)
 
 	// Assert
 	if err != nil {
 		t.Errorf("Experienced an error: %v", err)
 	}
-	if len(*album) == 0 {
+	if albumJSON == nil {
+		t.Fatalf("No Album Returned")
+	}
+	if len(*albumJSON) == 0 {
 		t.Errorf("No Album Returned")
 	}
 }

@@ -30,6 +30,9 @@ func Test_GenerateAccessToken(t *testing.T) {
 	// Assert
 
 	if auth == nil || len(auth.ImgurTokenResponse.AccessToken) <= 0 {
+		if auth == nil || auth.ImgurTokenResponse == nil {
+			t.Fatalf("expected token response to be set")
+		}
 		t.Fatalf("expected access token to be set")
 	}
 }
