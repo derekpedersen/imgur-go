@@ -2,6 +2,7 @@ package album
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -45,6 +46,12 @@ func (svc *AlbumServiceImpl) QueryAlbum(
 	req, err := http.NewRequest("GET", svc.url+albumHash, nil)
 	if err != nil {
 		log.Errorf("Error creating request:\n %v", err)
+		return nil, err
+	}
+
+	if svc.auth.ImgurTokenResponse == nil || len(svc.auth.ImgurTokenResponse.AccessToken) == 0 {
+		err := fmt.Errorf("imgur access token is not configured")
+		log.Errorf("Error preparing request:\n %v", err)
 		return nil, err
 	}
 

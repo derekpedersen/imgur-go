@@ -7,5 +7,4 @@ build:
 
 test:
 	go test ./... -v -coverprofile cp.out
-	go get github.com/t-yuki/gocover-cobertura
-	go tool cover -html=cp.out -o cp.html && gocover-cobertura < cp.out > cp.xml
+	go tool cover -html=cp.out -o cp.html && go run github.com/t-yuki/gocover-cobertura@latest < cp.out > cp.xml
