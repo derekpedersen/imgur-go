@@ -106,3 +106,18 @@ make test
 ```
 
 The coverage profile that is created via `make test` will also include an html webpage that can be used to view the exact lines of code that are covered and not covered. 
+
+### table-driven style enforcement
+
+`make test` now runs a style gate before unit/integration tests.
+
+- The gate checks changed `*_test.go` files and requires table-driven structure.
+- A changed test file with `Test*` functions must include both `[]struct` test cases and `t.Run(...)` subtests.
+- The script is `scripts/check-table-tests.sh` and can be run directly.
+
+By default, the check compares against `origin/master` when available, then falls back to `HEAD~1`.
+You can override the comparison base with `TABLE_TEST_BASE_REF`:
+
+```bash
+TABLE_TEST_BASE_REF=origin/main bash ./scripts/check-table-tests.sh
+```

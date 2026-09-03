@@ -9,6 +9,42 @@ import (
 	"github.com/derekpedersen/imgur-go/imgur"
 )
 
+func TestNewService(t *testing.T) {
+	validClient, err := imgur.NewClient(imgur.Config{BaseURL: "https://api.imgur.com", ClientID: "test-client-id", Mode: imgur.AuthModeAnonymous})
+	if err != nil {
+		t.Fatalf("unexpected client error: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		client  *imgur.Client
+		wantErr bool
+	}{
+		{name: "nil client", client: nil, wantErr: true},
+		{name: "valid client", client: validClient, wantErr: false},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			svc, err := account.NewService(tc.client)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected constructor error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected constructor error: %v", err)
+			}
+			if svc == nil {
+				t.Fatal("expected service to be initialized")
+			}
+		})
+	}
+}
+
 func TestGetAccount(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
