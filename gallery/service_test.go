@@ -31,7 +31,10 @@ func TestGetGallery(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := gallery.NewService(client)
+	svc, err := gallery.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	items, err := svc.GetGallery(gallery.ListOptions{Section: "top", Sort: "top", Window: "week", Page: 2, ShowViral: &showViral})
 	if err != nil {
 		t.Fatalf("unexpected get gallery error: %v", err)
@@ -61,7 +64,10 @@ func TestSearchGallery(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := gallery.NewService(client)
+	svc, err := gallery.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	items, err := svc.SearchGallery("cats", gallery.ListOptions{Sort: "time", Window: "all", Page: 1})
 	if err != nil {
 		t.Fatalf("unexpected search gallery error: %v", err)
@@ -88,7 +94,10 @@ func TestGetGalleryAlbum(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := gallery.NewService(client)
+	svc, err := gallery.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	albumItem, err := svc.GetGalleryAlbum("abc123")
 	if err != nil {
 		t.Fatalf("unexpected get gallery album error: %v", err)
@@ -118,7 +127,10 @@ func TestVoteGalleryItem(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := gallery.NewService(client)
+	svc, err := gallery.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	ok, err := svc.VoteGalleryItem("abc123", "up")
 	if err != nil {
 		t.Fatalf("unexpected vote error: %v", err)
@@ -134,7 +146,10 @@ func TestVoteGalleryItemRejectsInvalidVote(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := gallery.NewService(client)
+	svc, err := gallery.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	_, err = svc.VoteGalleryItem("abc123", "banana")
 	if err == nil {
 		t.Fatal("expected invalid vote error")

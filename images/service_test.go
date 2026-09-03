@@ -19,14 +19,40 @@ func hasIntegrationEnv() bool {
 		os.Getenv("IMGUR_REFRESH_TOKEN") != ""
 }
 
+func newOAuthClient(t *testing.T) *imgur.Client {
+	t.Helper()
+
+	auth, err := authorization.NewAuthorization()
+	if err != nil {
+		t.Fatalf("failed to initialize authorization: %v", err)
+	}
+	if auth.ImgurTokenResponse == nil || auth.ImgurTokenResponse.AccessToken == "" {
+		t.Fatal("expected oauth access token to be initialized")
+	}
+
+	client, err := imgur.NewClient(imgur.Config{
+		ClientID:    auth.ClientID,
+		AccessToken: auth.ImgurTokenResponse.AccessToken,
+		Mode:        imgur.AuthModeOAuth,
+	})
+	if err != nil {
+		t.Fatalf("failed to create oauth client: %v", err)
+	}
+
+	return client
+}
+
 func TestGetImage(t *testing.T) {
 	if !hasIntegrationEnv() {
 		t.Skip("skipping integration test: IMGUR_* env vars are not set")
 	}
 
 	imageID := "2nCt3Sbl"
-	auth, _ := authorization.NewAuthorization()
-	svc := images.NewImageService(*auth, "https://api.imgur.com/3/image/")
+	client := newOAuthClient(t)
+	svc, err := images.NewService(client)
+	if err != nil {
+		t.Fatalf("failed to initialize image service: %v", err)
+	}
 
 	image, err := svc.GetImage(imageID)
 	if err != nil {
@@ -57,12 +83,15 @@ func TestQueryImageWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := images.NewImageServiceWithClient(client)
+	svc, err := images.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	body, err := svc.QueryImage("abc123")
 	if err != nil {
 		t.Fatalf("unexpected query image error: %v", err)
 	}
-	if body == nil || len(*body) == 0 {
+	if len(body) == 0 {
 		t.Fatal("expected non-empty body")
 	}
 }
@@ -78,7 +107,10 @@ func TestGetImageWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := images.NewImageServiceWithClient(client)
+	svc, err := images.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	got, err := svc.GetImage("abc123")
 	if err != nil {
 		t.Fatalf("unexpected get image error: %v", err)
@@ -121,7 +153,10 @@ func TestImageMutationsWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := images.NewImageServiceWithClient(client)
+	svc, err := images.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 
 	uploadID, err := svc.UploadImage(images.UploadImageRequest{Image: "base64-data", Type: "base64", Title: "Test Image"})
 	if err != nil {

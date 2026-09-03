@@ -13,37 +13,22 @@ import (
 	"github.com/derekpedersen/imgur-go/imgur"
 )
 
-// Service defines gallery operations.
-type Service interface {
-	GetGallery(options ListOptions) ([]GalleryItem, error)
-	SearchGallery(query string, options ListOptions) ([]GalleryItem, error)
-	GetGalleryAlbum(albumHash string) (*GalleryAlbum, error)
-	VoteGalleryItem(itemHash, vote string) (bool, error)
-}
-
-// ServiceImpl is the default gallery service implementation.
-type ServiceImpl struct {
+// Service provides gallery operations.
+type Service struct {
 	client *imgur.Client
 }
 
 // NewService creates a gallery service backed by a shared Imgur client.
-func NewService(client *imgur.Client) *ServiceImpl {
-	return &ServiceImpl{client: client}
-}
-
-func (svc *ServiceImpl) requireClient() error {
-	if svc.client == nil {
-		return fmt.Errorf("gallery service requires a shared client")
+func NewService(client *imgur.Client) (*Service, error) {
+	if client == nil {
+		return nil, fmt.Errorf("gallery service requires a shared client")
 	}
 
-	return nil
+	return &Service{client: client}, nil
 }
 
-func (svc *ServiceImpl) do(method, path string, body io.Reader, contentType string) (*string, error) {
-	if err := svc.requireClient(); err != nil {
-		return nil, err
-	}
-
+// do executes a request against the gallery endpoints and returns the raw body.
+func (svc *Service) do(method, path string, body io.Reader, contentType string) ([]byte, error) {
 	req, err := svc.client.NewRequest(context.Background(), method, path, body)
 	if err != nil {
 		return nil, err
@@ -58,15 +43,10 @@ func (svc *ServiceImpl) do(method, path string, body io.Reader, contentType stri
 	}
 	defer resp.Body.Close()
 
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	result := string(b)
-	return &result, nil
+	return io.ReadAll(resp.Body)
 }
 
+// defaultListOptions applies Imgur API defaults to unset list options.
 func defaultListOptions(options ListOptions) ListOptions {
 	if options.Section == "" {
 		options.Section = "hot"
@@ -83,6 +63,7 @@ func defaultListOptions(options ListOptions) ListOptions {
 	return options
 }
 
+// buildGalleryPath builds a path for the /3/gallery listing endpoint.
 func buildGalleryPath(base string, options ListOptions) string {
 	o := defaultListOptions(options)
 	path := base + "/" + o.Section + "/" + o.Sort + "/" + o.Window + "/" + strconv.Itoa(o.Page)
@@ -94,23 +75,23 @@ func buildGalleryPath(base string, options ListOptions) string {
 	return path
 }
 
-// GetGallery returns gallery items by section/sort/window/page.
-func (svc *ServiceImpl) GetGallery(options ListOptions) ([]GalleryItem, error) {
+// GetGallery returns gallery items by section, sort, window, and page.
+func (svc *Service) GetGallery(options ListOptions) ([]GalleryItem, error) {
 	body, err := svc.do(http.MethodGet, buildGalleryPath("/3/gallery", options), nil, "")
 	if err != nil {
 		return nil, err
 	}
 
 	res := GalleryListResponse{}
-	if err := json.Unmarshal([]byte(*body), &res); err != nil {
+	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 
 	return res.Data, nil
 }
 
-// SearchGallery searches gallery items by query.
-func (svc *ServiceImpl) SearchGallery(query string, options ListOptions) ([]GalleryItem, error) {
+// SearchGallery searches gallery items by free-text query and list options.
+func (svc *Service) SearchGallery(query string, options ListOptions) ([]GalleryItem, error) {
 	o := defaultListOptions(options)
 	q := url.Values{}
 	q.Set("q", query)
@@ -126,7 +107,7 @@ func (svc *ServiceImpl) SearchGallery(query string, options ListOptions) ([]Gall
 	}
 
 	res := GalleryListResponse{}
-	if err := json.Unmarshal([]byte(*body), &res); err != nil {
+	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 
@@ -134,14 +115,14 @@ func (svc *ServiceImpl) SearchGallery(query string, options ListOptions) ([]Gall
 }
 
 // GetGalleryAlbum returns a gallery album detail by hash.
-func (svc *ServiceImpl) GetGalleryAlbum(albumHash string) (*GalleryAlbum, error) {
+func (svc *Service) GetGalleryAlbum(albumHash string) (*GalleryAlbum, error) {
 	body, err := svc.do(http.MethodGet, "/3/gallery/album/"+albumHash, nil, "")
 	if err != nil {
 		return nil, err
 	}
 
 	res := GalleryAlbumResponse{}
-	if err := json.Unmarshal([]byte(*body), &res); err != nil {
+	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +130,7 @@ func (svc *ServiceImpl) GetGalleryAlbum(albumHash string) (*GalleryAlbum, error)
 }
 
 // VoteGalleryItem votes on a gallery item. Accepted values are up, down, or veto.
-func (svc *ServiceImpl) VoteGalleryItem(itemHash, vote string) (bool, error) {
+func (svc *Service) VoteGalleryItem(itemHash, vote string) (bool, error) {
 	vote = strings.ToLower(strings.TrimSpace(vote))
 	if vote != "up" && vote != "down" && vote != "veto" {
 		return false, fmt.Errorf("invalid vote value: %s", vote)
@@ -161,7 +142,7 @@ func (svc *ServiceImpl) VoteGalleryItem(itemHash, vote string) (bool, error) {
 	}
 
 	res := BoolResponse{}
-	if err := json.Unmarshal([]byte(*body), &res); err != nil {
+	if err := json.Unmarshal(body, &res); err != nil {
 		return false, err
 	}
 

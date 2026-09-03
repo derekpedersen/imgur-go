@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/derekpedersen/imgur-go/imgurtypes"
-	"github.com/sirupsen/logrus"
 )
 
 type ImgurTokenResponse = imgurtypes.TokenResponse
@@ -70,8 +69,6 @@ func (a *Authorization) GenerateAccessToken() (
 		return nil, err
 	}
 
-	logrus.Debugf("imgur auth request: %v", *req)
-
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	resp, err := client.Do(req)
 	if err != nil {
@@ -91,8 +88,6 @@ func (a *Authorization) GenerateAccessToken() (
 		return nil, err
 	}
 
-	logrus.Debugf("imgur auth response: %v", string(bodyText))
-
 	return imgurTokenResponse, nil
 }
 
@@ -108,5 +103,5 @@ func (a *Authorization) SetAccessToken() (
 
 	a.ImgurTokenResponse = resp
 
-	return imgurTokenResponse, nil
+	return resp, nil
 }

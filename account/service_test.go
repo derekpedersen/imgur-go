@@ -26,7 +26,10 @@ func TestGetAccount(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := account.NewService(client)
+	svc, err := account.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	profile, err := svc.GetAccount("alice")
 	if err != nil {
 		t.Fatalf("unexpected get account error: %v", err)
@@ -50,7 +53,10 @@ func TestGetFavorites(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := account.NewService(client)
+	svc, err := account.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	items, err := svc.GetFavorites("alice", 2, "top")
 	if err != nil {
 		t.Fatalf("unexpected get favorites error: %v", err)
@@ -74,7 +80,10 @@ func TestGetSubmissions(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := account.NewService(client)
+	svc, err := account.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	items, err := svc.GetSubmissions("alice", 1)
 	if err != nil {
 		t.Fatalf("unexpected get submissions error: %v", err)
@@ -98,7 +107,10 @@ func TestGetSettings(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := account.NewService(client)
+	svc, err := account.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	settings, err := svc.GetSettings("alice")
 	if err != nil {
 		t.Fatalf("unexpected get settings error: %v", err)

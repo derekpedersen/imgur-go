@@ -19,6 +19,29 @@ func hasIntegrationEnv() bool {
 		os.Getenv("IMGUR_REFRESH_TOKEN") != ""
 }
 
+func newOAuthClient(t *testing.T) *imgur.Client {
+	t.Helper()
+
+	auth, err := authorization.NewAuthorization()
+	if err != nil {
+		t.Fatalf("failed to initialize authorization: %v", err)
+	}
+	if auth.ImgurTokenResponse == nil || auth.ImgurTokenResponse.AccessToken == "" {
+		t.Fatal("expected oauth access token to be initialized")
+	}
+
+	client, err := imgur.NewClient(imgur.Config{
+		ClientID:    auth.ClientID,
+		AccessToken: auth.ImgurTokenResponse.AccessToken,
+		Mode:        imgur.AuthModeOAuth,
+	})
+	if err != nil {
+		t.Fatalf("failed to create oauth client: %v", err)
+	}
+
+	return client
+}
+
 func TestGetAlbum(t *testing.T) {
 	if !hasIntegrationEnv() {
 		t.Skip("skipping integration test: IMGUR_* env vars are not set")
@@ -26,11 +49,11 @@ func TestGetAlbum(t *testing.T) {
 
 	// Arrange
 	albumID := "4TZhhtk"
-	auth, err := authorization.NewAuthorization()
+	client := newOAuthClient(t)
+	alSvc, err := album.NewService(client)
 	if err != nil {
-		t.Fatalf("failed to initialize authorization: %v", err)
+		t.Fatalf("failed to initialize album service: %v", err)
 	}
-	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 
 	// Act
 	album, err := alSvc.GetAlbum(albumID)
@@ -54,11 +77,11 @@ func TestQueryAlbum(t *testing.T) {
 
 	// Arrange
 	albumID := "PIRuI"
-	auth, err := authorization.NewAuthorization()
+	client := newOAuthClient(t)
+	alSvc, err := album.NewService(client)
 	if err != nil {
-		t.Fatalf("failed to initialize authorization: %v", err)
+		t.Fatalf("failed to initialize album service: %v", err)
 	}
-	alSvc := album.NewAlbumService(*auth, "https://api.imgur.com/3/album/")
 
 	// Act
 	albumJSON, err := alSvc.QueryAlbum(albumID)
@@ -67,10 +90,7 @@ func TestQueryAlbum(t *testing.T) {
 	if err != nil {
 		t.Errorf("Experienced an error: %v", err)
 	}
-	if albumJSON == nil {
-		t.Fatalf("No Album Returned")
-	}
-	if len(*albumJSON) == 0 {
+	if len(albumJSON) == 0 {
 		t.Errorf("No Album Returned")
 	}
 }
@@ -99,13 +119,16 @@ func TestQueryAlbumWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := album.NewAlbumServiceWithClient(client)
+	svc, err := album.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	body, err := svc.QueryAlbum("testhash")
 	if err != nil {
 		t.Fatalf("unexpected query error: %v", err)
 	}
 
-	if body == nil || len(*body) == 0 {
+	if len(body) == 0 {
 		t.Fatal("expected non-empty response body")
 	}
 }
@@ -126,7 +149,10 @@ func TestGetAlbumWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := album.NewAlbumServiceWithClient(client)
+	svc, err := album.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	got, err := svc.GetAlbum("abc123")
 	if err != nil {
 		t.Fatalf("unexpected get album error: %v", err)
@@ -172,7 +198,10 @@ func TestCreateAlbumWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := album.NewAlbumServiceWithClient(client)
+	svc, err := album.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	id, err := svc.CreateAlbum(album.CreateAlbumRequest{Title: "New Album", IDs: []string{"img1", "img2"}})
 	if err != nil {
 		t.Fatalf("unexpected create album error: %v", err)
@@ -205,7 +234,10 @@ func TestUpdateAlbumWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := album.NewAlbumServiceWithClient(client)
+	svc, err := album.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	ok, err := svc.UpdateAlbum("abc123", album.UpdateAlbumRequest{Title: "Renamed"})
 	if err != nil {
 		t.Fatalf("unexpected update album error: %v", err)
@@ -238,7 +270,10 @@ func TestDeleteAlbumWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := album.NewAlbumServiceWithClient(client)
+	svc, err := album.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 	ok, err := svc.DeleteAlbum("abc123")
 	if err != nil {
 		t.Fatalf("unexpected delete album error: %v", err)
@@ -287,7 +322,10 @@ func TestFavoriteAndImageMembershipWithClient(t *testing.T) {
 		t.Fatalf("unexpected client error: %v", err)
 	}
 
-	svc := album.NewAlbumServiceWithClient(client)
+	svc, err := album.NewService(client)
+	if err != nil {
+		t.Fatalf("unexpected service error: %v", err)
+	}
 
 	favorited, err := svc.FavoriteAlbum("abc123")
 	if err != nil || !favorited {
