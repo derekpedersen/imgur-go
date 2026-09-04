@@ -7,11 +7,15 @@ import (
 	"github.com/derekpedersen/imgur-go/authorization"
 )
 
+func hasIntegrationEnv() bool {
+	return os.Getenv("IMGUR_CLIENT_ID") != "" &&
+		os.Getenv("IMGUR_CLIENT_SECRET") != "" &&
+		os.Getenv("IMGUR_REFRESH_TOKEN") != ""
+}
+
 func Test_GenerateAccessToken(t *testing.T) {
-	if len(os.Getenv("IMGUR_REFRESH_TOKEN")) == 0 ||
-		len(os.Getenv("IMGUR_CLIENT_ID")) == 0 ||
-		len(os.Getenv("IMGUR_CLIENT_SECRET")) == 0 {
-		t.Skip("skipping integration test: Imgur credentials are not set")
+	if !hasIntegrationEnv() {
+		t.Skip("skipping integration test: IMGUR_* env vars are not set")
 	}
 
 	// Arrange

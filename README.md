@@ -17,24 +17,65 @@ This project is consumed by other projects and isn't an application that is itse
 
 ## dependencies
 
-Currently the `imgur-go` package relies on `dep` for it's dependency management. If you don't have `dep` installed on your machine just follow the [instructions here](https://github.com/golang/dep#installation).
+This project uses Go modules.
 
-To use `dep` we must first initialize the project by running the following command:
-
-```bash
-dep init
-```
-
-After the initialization, when we want to update our depdencies we just run the following command:
+To download and tidy dependencies:
 
 ```bash
-dep ensure
+go mod tidy
 ```
-Currently there is alreay a `makefile` target for updating the project dependencies:
+
+There is also a `makefile` target for updating project dependencies:
 
 ```bash
 make dependencies
 ```
+
+## usage
+
+Create one shared client, then construct package services from that client.
+
+```go
+client, err := imgur.NewClient(imgur.Config{
+	ClientID: os.Getenv("IMGUR_CLIENT_ID"),
+	Mode:     imgur.AuthModeAnonymous,
+})
+if err != nil {
+	return err
+}
+
+albumService, err := album.NewService(client)
+if err != nil {
+	return err
+}
+
+imageService, err := images.NewService(client)
+if err != nil {
+	return err
+}
+
+_ = albumService
+_ = imageService
+```
+
+For OAuth endpoints, create the client with `Mode: imgur.AuthModeOAuth` and a valid `AccessToken`.
+
+## migration notes
+
+Recent refactors removed Java-style service constructors and implementation naming.
+
+- Removed constructors:
+	- `album.NewAlbumService(auth, apiURL)`
+	- `album.NewAlbumServiceWithClient(client)`
+	- `images.NewImageService(auth, apiURL)`
+	- `images.NewImageServiceWithClient(client)`
+- New constructor pattern:
+	- `album.NewService(client)`
+	- `images.NewService(client)`
+	- `account.NewService(client)`
+	- `gallery.NewService(client)`
+- Constructor behavior:
+	- Service constructors now return `(*Service, error)` and validate that a non-nil client is provided.
 
 ## build
 
@@ -65,3 +106,18 @@ make test
 ```
 
 The coverage profile that is created via `make test` will also include an html webpage that can be used to view the exact lines of code that are covered and not covered. 
+
+### table-driven style enforcement
+
+`make test` now runs a style gate before unit/integration tests.
+
+- The gate checks changed `*_test.go` files and requires table-driven structure.
+- A changed test file with `Test*` functions must include both `[]struct` test cases and `t.Run(...)` subtests.
+- The script is `scripts/check-table-tests.sh` and can be run directly.
+
+By default, the check compares against `origin/master` when available, then falls back to `HEAD~1`.
+You can override the comparison base with `TABLE_TEST_BASE_REF`:
+
+```bash
+TABLE_TEST_BASE_REF=origin/main bash ./scripts/check-table-tests.sh
+```
