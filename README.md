@@ -1,123 +1,260 @@
-# Imgur
+# imgur-go
 
-A golang package for consuming [imgur](https://imgur.com/) albums.
+A Go client for the Imgur API built around a shared client and package-specific services.
 
 [![Build Status](https://jenkins.derekpedersen.com/buildStatus/icon?job=derekpedersen/imgur-go/master&style=plastic&.png)](https://jenkins.derekpedersen.com/job/derekpedersen/job/imgur-go/job/master/)
 [![Coverage Status](https://coveralls.io/repos/github/derekpedersen/imgur-go/badge.png?branch=master)](https://coveralls.io/github/derekpedersen/imgur-go)
 
-One day I would like to expand to cover the entire [imgur api](https://apidocs.imgur.com/).
+This repository provides a small Go SDK for the Imgur API. The package uses a single shared `imgur.Client` and exposes domain-specific services for albums, images, gallery, account, and auth-related helpers.
 
-## golang
+## Overview
 
-This project is built using golang, if you don't have it installed on your machine you can find the [instructions here](https://golang.org/doc/install).
+The main pattern is intentionally simple:
 
-### main.go
+1. Create one shared client with `imgur.NewClient(...)`.
+2. Build a service from that client with `X.NewService(client)`.
+3. Call typed methods on the service.
 
-This project is consumed by other projects and isn't an application that is itself deployed, so there is a `main.go` file at the root of the project just to make `golang` happy. I'm sure there is a more elegant solution but for now this is the setup.
+This keeps authentication, base URL handling, and request execution centralized in one place.
 
-## dependencies
+## Supported packages
 
-This project uses Go modules.
+- `imgur` — shared client, auth mode selection, base URL, and HTTP request execution
+- `album` — album lookup and mutation operations
+- `images` — image lookup, upload, update, delete, and favorite operations
+- `gallery` — gallery listing, search, album lookup, and voting
+- `account` — account metadata and account-scoped collections
+- `authorization` — refresh-token based OAuth helpers
+- `imgurtypes` — shared response and token types
 
-To download and tidy dependencies:
+This is not a full Imgur API wrapper, but the package structure is built to extend cleanly as more endpoints are added.
+
+## Requirements
+
+- Go 1.25+
+- An Imgur Client ID for anonymous requests
+- An Imgur access token for OAuth-scoped requests
+
+## Installation
 
 ```bash
-go mod tidy
+go get github.com/derekpedersen/imgur-go
 ```
 
-There is also a `makefile` target for updating project dependencies:
+In a Go module, import the package you need:
 
-```bash
-make dependencies
+```go
+import "github.com/derekpedersen/imgur-go/imgur"
 ```
 
-## usage
+## Quick start
 
-Create one shared client, then construct package services from that client.
+### Anonymous client
+
+Use anonymous mode for public endpoints that only require a Client ID.
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+
+    "github.com/derekpedersen/imgur-go/account"
+    "github.com/derekpedersen/imgur-go/album"
+    "github.com/derekpedersen/imgur-go/gallery"
+    "github.com/derekpedersen/imgur-go/images"
+    "github.com/derekpedersen/imgur-go/imgur"
+)
+
+func main() {
+    client, err := imgur.NewClient(imgur.Config{
+        ClientID: os.Getenv("IMGUR_CLIENT_ID"),
+        Mode:     imgur.AuthModeAnonymous,
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    albumSvc, err := album.NewService(client)
+    if err != nil {
+        panic(err)
+    }
+
+    imageSvc, err := images.NewService(client)
+    if err != nil {
+        panic(err)
+    }
+
+    gallerySvc, err := gallery.NewService(client)
+    if err != nil {
+        panic(err)
+    }
+
+    accountSvc, err := account.NewService(client)
+    if err != nil {
+        panic(err)
+    }
+
+    _ = albumSvc
+    _ = imageSvc
+    _ = gallerySvc
+    _ = accountSvc
+
+    fmt.Println("Imgur client and services initialized")
+}
+```
+
+### OAuth client
+
+Use OAuth mode when an endpoint requires a user access token.
 
 ```go
 client, err := imgur.NewClient(imgur.Config{
-	ClientID: os.Getenv("IMGUR_CLIENT_ID"),
-	Mode:     imgur.AuthModeAnonymous,
+    AccessToken: os.Getenv("IMGUR_ACCESS_TOKEN"),
+    Mode:        imgur.AuthModeOAuth,
 })
 if err != nil {
-	return err
+    panic(err)
 }
-
-albumService, err := album.NewService(client)
-if err != nil {
-	return err
-}
-
-imageService, err := images.NewService(client)
-if err != nil {
-	return err
-}
-
-_ = albumService
-_ = imageService
 ```
 
-For OAuth endpoints, create the client with `Mode: imgur.AuthModeOAuth` and a valid `AccessToken`.
+You can also override the default URL or inject your own HTTP client:
 
-## migration notes
+- `BaseURL` — custom API base URL
+- `HTTPClient` — custom `*http.Client`
 
-Recent refactors removed Java-style service constructors and implementation naming.
+## Common usage patterns
 
-- Removed constructors:
-	- `album.NewAlbumService(auth, apiURL)`
-	- `album.NewAlbumServiceWithClient(client)`
-	- `images.NewImageService(auth, apiURL)`
-	- `images.NewImageServiceWithClient(client)`
-- New constructor pattern:
-	- `album.NewService(client)`
-	- `images.NewService(client)`
-	- `account.NewService(client)`
-	- `gallery.NewService(client)`
-- Constructor behavior:
-	- Service constructors now return `(*Service, error)` and validate that a non-nil client is provided.
+### Service constructors
 
-## build
+Each service follows the same constructor pattern:
 
-Since this a golang project if we wanted to build it we could just run the command:
+```go
+svc, err := album.NewService(client)
+if err != nil {
+    return err
+}
+```
+
+Service constructors validate a non-nil client and return an error if required dependencies are missing.
+
+### Typical calls
+
+```go
+albumInfo, err := albumSvc.GetAlbum("abc123")
+if err != nil {
+    return err
+}
+
+imageInfo, err := imageSvc.GetImage("def456")
+if err != nil {
+    return err
+}
+
+items, err := gallerySvc.GetGallery(gallery.ListOptions{
+    Section: "hot",
+    Sort:    "viral",
+    Window:  "day",
+    Page:    0,
+})
+if err != nil {
+    return err
+}
+
+_ = albumInfo
+_ = imageInfo
+_ = items
+```
+
+## Authorization helper
+
+The `authorization` package includes a refresh-token-based helper for generating OAuth tokens.
+
+```go
+auth, err := authorization.NewAuthorization()
+if err != nil {
+    panic(err)
+}
+
+fmt.Println(auth.ClientID)
+```
+
+This reads environment variables such as:
+
+- `IMGUR_CLIENT_ID`
+- `IMGUR_CLIENT_SECRET`
+- `IMGUR_REFRESH_TOKEN`
+
+## Repository conventions
+
+This project intentionally keeps a simple, explicit Go API:
+
+- Shared client at the library boundary
+- Service constructors for each feature area
+- Errors returned to callers instead of being logged internally
+- Table-driven tests with `t.Run(...)` subtests
+
+## Migration note
+
+Older Java-style names are not the supported pattern. The current public API uses the following constructors:
+
+- `album.NewService(client)`
+- `images.NewService(client)`
+- `account.NewService(client)`
+- `gallery.NewService(client)`
+
+Use one shared client and build services from it.
+
+## Build and test
 
 ```bash
 go build
 ```
 
-But to make it easier this project has a `makefile` target that handles any additional arguments:
-
-```bash
-make build
-```
-
-## test
-
-With being a golang project if we just wanted to execute the tests we could run the command:
-
 ```bash
 go test ./...
 ```
 
-But to make it easier this project has a `makefile` target that handles the additional arguments and creating a coverage profile:
+This repository also exposes convenience targets in the Makefile:
 
 ```bash
+make build
 make test
 ```
 
-The coverage profile that is created via `make test` will also include an html webpage that can be used to view the exact lines of code that are covered and not covered. 
+The test target creates a coverage profile and an HTML coverage report.
 
-### table-driven style enforcement
+### Table-driven test gate
 
-`make test` now runs a style gate before unit/integration tests.
+`make test` runs a project check to ensure changed `*_test.go` files remain in the table-driven style expected by the repository.
 
-- The gate checks changed `*_test.go` files and requires table-driven structure.
-- A changed test file with `Test*` functions must include both `[]struct` test cases and `t.Run(...)` subtests.
-- The script is `scripts/check-table-tests.sh` and can be run directly.
+The gate requires:
 
-By default, the check compares against `origin/master` when available, then falls back to `HEAD~1`.
-You can override the comparison base with `TABLE_TEST_BASE_REF`:
+- a slice of test cases (`[]struct`)
+- `t.Run(...)` for each case
+- a Git-based comparison check for changed files
+
+The script lives at `scripts/check-table-tests.sh` and can be run directly:
+
+```bash
+bash ./scripts/check-table-tests.sh
+```
+
+Override the comparison base when needed:
 
 ```bash
 TABLE_TEST_BASE_REF=origin/main bash ./scripts/check-table-tests.sh
 ```
+
+## Notes for consuming developers and AI agents
+
+- Prefer creating one `imgur.Client` and reusing it across service instances.
+- Initialize the client once at startup and pass it into service constructors.
+- Match the auth mode to the endpoint: anonymous for public reads, OAuth for user-scoped actions.
+- Use the package-level services as the public surface for operations; avoid reaching into implementation details.
+- The repository is intentionally package-oriented and straightforward, which makes it easy to add new Imgur resources without introducing a new abstraction layer.
+
+## License
+
+This repository does not currently include a root-level license file. If you plan to redistribute or publish this package, confirm the applicable licensing requirements for your environment before release.
